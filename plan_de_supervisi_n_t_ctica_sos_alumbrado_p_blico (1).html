@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan de Supervisión Táctica e Implementación · S.O.S Seguridad Privada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+  :root {
+    /* Base Dark Backgrounds */
+    --bg: #040914;
+    --bg-alt: #081020;
+    --panel: #0E1A30;
+    --panel-2: #142442;
+    --line: rgba(255, 255, 255, 0.12);
+    
+    /* S.O.S Seguridad Privada Official Palette */
+    --sos-blue: #004C97;
+    --sos-blue-dark: #002855;
+    --sos-blue-bright: #0072CE;
+    --sos-blue-light: #38BDF8;
+    --sos-gold: #FFC700;
+    --sos-gold-dark: #D4A000;
+    --sos-gold-dim: rgba(255, 199, 0, 0.15);
+    --sos-blue-dim: rgba(0, 76, 151, 0.25);
+    --sos-silver: #CBD5E1;
+
+    /* Functional Accents */
+    --lamp: #FFC700;
+    --lamp-soft: #FDE047;
+    --alert: #EF4444;
+    --reincidente: #FF0033;
+    --ok: #10B981;
+    --ok-dim: rgba(16, 185, 129, 0.15);
+    --text: #F8FAFC;
+    --text-dim: #94A3B8;
+    --text-faint: #64748B;
+
+    /* Zone Palette matching tactical reference */
+    --z1-color: #38BDF8; /* Azul Claro - Geocerca Norte */
+    --z2-color: #10B981; /* Verde - Geocerca Suroccidente */
+    --z3-color: #FFC700; /* Dorado/Amarillo - Geocerca Suroriente */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--sos-blue-bright); color: #FFF; }
+  a { color: inherit; text-decoration: none; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  h1, h2, h3, .disp {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    line-height: 1.02;
+    text-transform: uppercase;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 28px; }
+  section { position: relative; padding: 90px 0; border-top: 1px solid var(--line); }
+  section:first-of-type { border-top: none; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--sos-gold);
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 20px;
+  }
+  .eyebrow::before { content: ""; width: 24px; height: 3px; background: var(--sos-blue-bright); display: inline-block; }
+  .lede { color: var(--text-dim); font-size: 16.5px; max-width: 780px; margin-top: 14px; line-height: 1.6; }
+
+  /* Navigation Bar Header */
+  #topnav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 28px;
+    background: rgba(4, 9, 20, 0.95);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; letter-spacing: 1.2px;
+  }
+  #topnav .brand { display: flex; align-items: center; gap: 14px; color: var(--text); font-weight: 700; text-transform: uppercase; }
+  #topnav .sos-logo-header { height: 44px; width: auto; display: block; filter: drop-shadow(0 2px 8px rgba(0,76,151,0.5)); }
+  
+  .logo-sos {
+    height: auto;
+    max-height: 48px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+  }
+  .hero-logo-box img.logo-sos {
+    max-height: 85px;
+  }
+  .logo-placeholder {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--sos-gold);
+    border: 1px dashed var(--sos-gold);
+    padding: 6px 14px;
+    border-radius: 4px;
+    letter-spacing: 2px;
+  }
+
+  #topnav .brand-badge {
+    background: var(--sos-blue-dim);
+    border: 1px solid var(--sos-blue-bright);
+    color: #FFF;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+  }
+  #topnav .prog { position: absolute; bottom: -1px; left: 0; height: 3px; background: linear-gradient(90deg, var(--sos-blue-bright), var(--sos-gold)); width: 0%; transition: width .1s linear; }
+
+  /* Hero Section */
+  #hero {
+    min-height: 94vh;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding-top: 140px;
+    background: radial-gradient(ellipse 900px 500px at 80% 20%, rgba(0, 114, 206, 0.18), transparent 65%), 
+                radial-gradient(circle at 20% 80%, rgba(255, 199, 0, 0.08), transparent 50%), var(--bg);
+    overflow: hidden;
+    position: relative;
+  }
+  #hero-map { position: absolute; inset: 0; z-index: 0; opacity: 0.4; filter: saturate(0.8); }
+  #hero-map::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,9,20,0.5) 0%, rgba(4,9,20,0.88) 60%, var(--bg) 100%); }
+  .hero-inner { position: relative; z-index: 2; }
+  
+  .hero-logo-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(14, 26, 48, 0.92);
+    border: 1.5px solid var(--sos-blue-bright);
+    padding: 16px 26px;
+    border-radius: 8px;
+    margin-bottom: 28px;
+    box-shadow: 0 0 30px rgba(0, 76, 151, 0.4), inset 0 0 15px rgba(255, 199, 0, 0.1);
+  }
+  .hero-logo-box .hero-logo-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    color: #FFF;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+  .hero-logo-box .hero-logo-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--sos-gold);
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .hero-kicker { font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 3px; color: var(--lamp-soft); text-transform: uppercase; margin-bottom: 12px; }
+  h1.hero-title { font-size: clamp(38px, 5.8vw, 82px); color: var(--text); max-width: 1050px; }
+  h1.hero-title em { font-style: normal; color: var(--sos-gold); text-shadow: 0 0 25px rgba(255, 199, 0, 0.3); }
+  .hero-sub { color: var(--text-dim); font-size: 18px; max-width: 740px; margin-top: 20px; line-height: 1.6; }
+  
+  .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 48px; padding-bottom: 56px; }
+  .hstat { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--sos-gold); padding: 20px; border-radius: 4px; }
+  .hstat b { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px; color: #FFF; display: block; line-height: 1.1; margin-bottom: 4px; }
+  .hstat span { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 1px; color: var(--sos-gold); text-transform: uppercase; font-weight: 600; }
+
+  /* Navigation Tabs */
+  .main-tabs-bar {
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 65px;
+    z-index: 450;
+    backdrop-filter: blur(12px);
+  }
+  .main-tabs-flex {
+    display: flex;
+    gap: 12px;
+    padding: 12px 28px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+  .tab-btn span {
+    color: var(--sos-gold);
+    font-weight: 700;
+  }
+  .tab-btn.active, .tab-btn:hover {
+    border-color: var(--sos-gold);
+    color: #FFF;
+    background: var(--sos-blue-dim);
+    box-shadow: 0 0 15px rgba(0, 76, 151, 0.4);
+  }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* Map Panel */
+  #mapa-panel, .propuesta-map-container {
+    margin-top: 32px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+  }
+  #map, #map-propuesta { height: 530px; width: 100%; background: #080D18; }
+  .map-legend { display: flex; flex-wrap: wrap; gap: 20px; padding: 16px 24px; border-top: 1px solid var(--line); font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--text-dim); letter-spacing: .5px; background: var(--panel-2); }
+  .map-legend .item { display: flex; align-items: center; gap: 8px; }
+  .swatch { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px rgba(0,0,0,0.5); }
+  .map-filters { display: flex; gap: 8px; padding: 14px 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; background: var(--panel); }
+  .map-filters button {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+    background: transparent; border: 1px solid var(--line); color: var(--text-dim); padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: .15s;
+  }
+  .map-filters button.active, .map-filters button:hover { border-color: var(--sos-gold); color: var(--sos-gold); background: var(--sos-gold-dim); }
+
+  /* Estilos para Puntos de Alta Reincidencia (Rojo Vivo) */
+  .badge-reincidente {
+    background: #FF0033;
+    color: #FFFFFF;
+    font-weight: 800;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 6px;
+    box-shadow: 0 0 12px rgba(255, 0, 51, 0.8);
+    text-transform: uppercase;
+  }
+
+  @keyframes pulse-reincidente {
+    0% { filter: drop-shadow(0 0 4px #FF0033); }
+    50% { filter: drop-shadow(0 0 16px #FF0033); }
+    100% { filter: drop-shadow(0 0 4px #FF0033); }
+  }
+
+  .reincidente-marker {
+    animation: pulse-reincidente 1.2s infinite ease-in-out;
+  }
+
+  .leaflet-popup-content-wrapper { background: #0A1428; color: var(--text); border-radius: 6px; border: 1px solid var(--sos-blue-bright); box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
+  .leaflet-popup-tip { background: #0A1428; }
+  .popup-t { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; color: var(--sos-gold); text-transform: uppercase; }
+  .popup-n { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; margin: 3px 0; color: #FFF; }
+  .popup-d { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+
+  /* Cards & Grids */
+  .diag-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); margin-top: 40px; border: 1px solid var(--line); }
+  .diag-card { background: var(--panel); padding: 30px 24px; border-top: 3px solid transparent; transition: border-color 0.2s; }
+  .diag-card:hover { border-top-color: var(--sos-gold); }
+  .diag-card h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; color: #FFF; margin-bottom: 10px; }
+  .diag-card p { color: var(--text-dim); font-size: 13.5px; line-height: 1.6; }
+  .diag-card .tag { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--sos-gold); letter-spacing: 1px; text-transform: uppercase; margin-top: 14px; display: block; font-weight: 600; }
+
+  .factor-grid { margin-top: 36px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  details.fcard { background: var(--panel); padding: 22px; transition: background 0.2s; }
+  details.fcard[open] { background: var(--panel-2); }
+  details.fcard summary { cursor: pointer; list-style: none; display: flex; justify-style: space-between; align-items: center; font-weight: 700; font-size: 15px; }
+  details.fcard summary::-webkit-details-marker { display: none; }
+  details.fcard summary .n { font-family: 'IBM Plex Mono', monospace; color: var(--sos-gold); font-size: 12px; margin-right: 8px; }
+  details.fcard summary::after { content: "+"; font-family: 'IBM Plex Mono', monospace; color: var(--sos-blue-bright); font-size: 18px; }
+  details.fcard[open] summary::after { content: "–"; }
+  details.fcard ul { margin-top: 16px; padding-left: 18px; color: var(--text-dim); font-size: 13.5px; line-height: 1.8; }
+
+  /* New Analysis / Judicial Report CSS Cards */
+  .stat-card-box {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    position: relative;
+  }
+  .stat-card-box b {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 38px;
+    color: var(--sos-gold);
+    display: block;
+    line-height: 1;
+  }
+  .stat-card-box span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 6px;
+  }
+  .kpi-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .kpi-badge.gold { background: var(--sos-gold-dim); color: var(--sos-gold); border: 1px solid var(--sos-gold); }
+  .kpi-badge.blue { background: var(--sos-blue-dim); color: var(--sos-blue-light); border: 1px solid var(--sos-blue-bright); }
+  .kpi-badge.green { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid #10B981; }
+
+  .improve-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 40px; }
+  .improve-card { background: var(--panel); padding: 32px 26px; }
+  .improve-card .tag-cat { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--sos-gold); letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+  .improve-card h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; margin-top: 10px; color: var(--text); }
+  .improve-card .desc { margin-top: 12px; font-size: 13.5px; color: var(--text-dim); line-height: 1.6; }
+  .insight { margin-top: 28px; background: var(--sos-blue-dim); border: 1px solid var(--sos-blue-bright); padding: 20px 24px; border-radius: 4px; font-size: 14.5px; color: #E0F2FE; line-height: 1.6; }
+
+  .time-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--sos-blue-dim);
+    border: 1px solid var(--sos-blue-bright);
+    color: #FFF;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+
+  .zone-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+  .zone-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 22px; transition: all 0.2s; cursor: pointer; }
+  .zone-card:hover, .zone-card.active { border-color: var(--sos-gold); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+  .zone-card .zone-tag { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; display: inline-block; padding: 4px 10px; border-radius: 12px; font-weight: 700; }
+  .zone-card h4 { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .zone-card p { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+  .zone-card ul { margin-top: 10px; padding-left: 16px; font-size: 12.5px; color: var(--text-dim); }
+
+  #propuesta { background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%); }
+  .pillars { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 24px; }
+  .pillar { background: var(--panel); padding: 32px 28px; }
+  .pillar .pnum { font-family: 'IBM Plex Mono', monospace; color: var(--sos-gold); font-size: 13px; letter-spacing: 2px; font-weight: 700; }
+  .pillar h3 { font-size: 26px; margin-top: 8px; margin-bottom: 14px; }
+  .pillar ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .pillar li { font-size: 13.5px; color: var(--text-dim); padding-left: 18px; position: relative; line-height: 1.6; }
+  .pillar li::before { content: "›"; position: absolute; left: 0; color: var(--sos-gold); font-weight: 800; font-size: 16px; }
+  .pillar li b { color: var(--text); font-weight: 600; }
+
+  .proj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 36px; }
+  .proj-card { border: 1px solid var(--sos-gold); background: var(--sos-gold-dim); padding: 30px 24px; text-align: center; border-radius: 6px; }
+  .proj-card h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; color: var(--sos-gold); display: block; }
+  .proj-card p { font-size: 13.5px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
+
+  #cierre { text-align: center; padding: 100px 0; background: radial-gradient(circle at center, rgba(0, 114, 206, 0.15), transparent 70%); }
+  #cierre h2 { font-size: clamp(32px, 4.5vw, 58px); max-width: 850px; margin: 0 auto; }
+  #cierre .lede { margin: 20px auto 0; }
+  .cta-row { display: flex; gap: 16px; justify-content: center; margin-top: 36px; flex-wrap: wrap; }
+  .cta {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 16px 30px; border-radius: 4px; text-decoration: none; transition: all 0.2s ease;
+  }
+  .cta.primary { background: var(--sos-blue-bright); color: #FFF; font-weight: 700; box-shadow: 0 4px 20px rgba(0, 114, 206, 0.5); }
+  .cta.primary:hover { background: #005bb5; transform: translateY(-2px); }
+  .cta.ghost { border: 1px solid var(--line); color: var(--text-dim); background: var(--panel); }
+  .cta.ghost:hover { border-color: var(--sos-gold); color: var(--sos-gold); }
+
+  footer { padding: 30px 0; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-faint); border-top: 1px solid var(--line); letter-spacing: 1px; }
+
+  @media(max-width:920px) {
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    .diag-grid, .factor-grid, .costo-grid, .improve-grid, .pillars, .proj-grid, .zone-cards-grid { grid-template-columns: 1fr !important; }
+    section { padding: 60px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topnav">
+  <div class="brand">
+    <img src="assets/logos/logo-sos.png" 
+         alt="S.O.S Seguridad Privada" 
+         class="logo-sos sos-logo-header"
+         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+    <span class="logo-placeholder" style="display:none;">LOGO</span>
+    
+    <span class="brand-badge">BARRANQUILLA</span>
+  </div>
+  <div class="mono" style="color:var(--text-dim);">CONTROL TÁCTICO & SUPERVISIÓN</div>
+  <div class="prog" id="progbar"></div>
+</div>
+
+<section id="hero">
+  <div id="hero-map"></div>
+  <div class="wrap hero-inner">
+    
+    <div class="hero-logo-box">
+      <img src="assets/logos/logo-sos.png" 
+           alt="S.O.S Seguridad Privada" 
+           class="logo-sos hero-logo-img"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+      <span class="logo-placeholder" style="display:none;">LOGO</span>
+      <div>
+        <div class="hero-logo-text">S.O.S SEGURIDAD PRIVADA LTDA.</div>
+        <div class="hero-logo-sub">Su Oportuno Servicio Ltda. · Desde 1957 · Distrito de Barranquilla</div>
+      </div>
+    </div>
+
+    <div class="hero-kicker">Plan Operativo de Supervisión Táctica & Control de Infraestructura</div>
+    <h1 class="hero-title">Protección activa e integral de la <em>red de alumbrado público</em>.</h1>
+    <p class="hero-sub">Estrategia táctica basada en la prevención disuasiva nocturna, patrullaje por geocercas supervisadas y consolidación probatoria judicial para neutralizar el vandalismo y el hurto en el distrito.</p>
+    
+    <div class="hero-stats">
+      <div class="hstat"><b>3 Geocercas</b><span>1 Supervisor dedicado c/u</span></div>
+      <div class="hstat"><b>18:00 a 06:00</b><span>Turno nocturno 12 hrs</span></div>
+      <div class="hstat"><b>Control GPS S.O.S</b><span>Trazabilidad en tiempo real</span></div>
+      <div class="hstat"><b>57 Hechos Matriz</b><span>Investigación e Inteligencia</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="main-tabs-bar">
+  <div class="wrap main-tabs-flex">
+    <button class="tab-btn active" id="tab-btn-diag" onclick="switchMainTab('diag')">
+      <span>01</span> Diagnóstico, Informe Investigativo y Cobertura
+    </button>
+    <button class="tab-btn" id="tab-btn-prop" onclick="switchMainTab('prop')">
+      <span>02</span> Propuesta de Implementación Nocturna 
+    </button>
+  </div>
+</div>
+
+<!-- TAB 1: DIAGNÓSTICO Y COBERTURA ACTUAL -->
+<div id="tab-content-diag" class="tab-pane active">
+
+  <!-- Map Section -->
+  <section id="mapa">
+    <div class="wrap">
+      <div class="eyebrow">01 · Cobertura Territorial Barranquilla</div>
+      <h2 class="disp">Georreferenciación de Puntos de Atención Táctica</h2>
+      <p class="lede">Mapa interactivo con la distribución de entornos prioritarios para patrullaje preventivo y verificación técnica del estado físico de la red por parte del personal de S.O.S Seguridad Privada.</p>
+      
+      <div id="mapa-panel">
+        <div class="map-filters" id="mapfilters">
+          <button data-f="all" class="active">Todos los sectores</button>
+          <button data-f="Reincidente" style="border-color: #FF0033; color: #FF0033;">🔴 Solo Alta Reincidencia</button>
+          <button data-f="Parque">Parques Comunitarios</button>
+          <button data-f="Avenida">Avenidas Principales</button>
+          <button data-f="Calle">Sectores Urbanos</button>
+          <button data-f="Puente">Puentes e Infraestructura</button>
+        </div>
+        <div id="map"></div>
+        <div class="map-legend">
+          <div class="item"><span class="swatch" style="background:#FF0033; box-shadow: 0 0 10px #FF0033;"></span><b style="color:#FF0033;">Punto de Alta Reincidencia</b></div>
+          <div class="item"><span class="swatch" style="background:#FFC700;"></span>Parque</div>
+          <div class="item"><span class="swatch" style="background:#0072CE;"></span>Avenida</div>
+          <div class="item"><span class="swatch" style="background:#10B981;"></span>Calle</div>
+          <div class="item"><span class="swatch" style="background:#CBD5E1;"></span>Puente / Infraestructura</div>
+          <div class="item" style="margin-left:auto; color:var(--sos-gold); font-weight:700;">Supervisión Táctica S.O.S Seguridad Privada</div>
+        </div>
+      </div>
+
+      <div class="diag-grid">
+        <div class="diag-card">
+          <h3>Parques Comunitarios</h3>
+          <p>Espacios de reunión ciudadana expuestos durante horarios nocturnos. Requieren rondas preventivas constantes y verificación física de registros y armarios.</p>
+          <span class="tag">Atención Preventiva Focalizada</span>
+        </div>
+        <div class="diag-card">
+          <h3>Corredores Viales</h3>
+          <p>Avenidas de alta velocidad que facilitan vías de evacuación rápida. Demandan vigilancia disuasiva continua para proteger líneas de transmisión continuas.</p>
+          <span class="tag">Patrullaje Motorizado Dinámico</span>
+        </div>
+        <div class="diag-card">
+          <h3>Estructuras Críticas</h3>
+          <p>Puentes e intercambiadores donde el acceso a cables exige inspección visual frecuente e intervención coordinada con las autoridades.</p>
+          <span class="tag">Verificación Táctica Especializada</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NUEVA SECCIÓN DE ANÁLISIS HISTÓRICO FINANCIERO Y EFECTIVIDAD DEL GRUPO SOS -->
+  <section id="afectacion-historica" style="background: var(--bg-alt);">
+    <div class="wrap">
+      <div class="eyebrow">02 · Informe de Afectación Financiera e Impacto</div>
+      <h2 class="disp">Comportamiento Histórico del Costo de Reparaciones</h2>
+      <p class="lede">Evolución del costo de reparaciones por hurto e infraestructura vandalizada en la red de alumbrado público (2024 - 2026 a julio), destacando el <strong>impacto directo tras la creación del equipo especializado de analistas S.O.S</strong>.</p>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 36px;">
+        <div style="background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--sos-gold); padding: 26px; border-radius: 6px;">
+          <div class="kpi-badge gold">Año 2024</div>
+          <b style="font-family:'Barlow Condensed', sans-serif; font-size: 42px; color: #FFF; display: block; margin-top: 10px;">$1.352 M</b>
+          <span style="font-family:'IBM Plex Mono', monospace; font-size: 11px; color: var(--sos-gold); text-transform: uppercase;">Costo Total Reparaciones 2024</span>
+          <p style="font-size: 12.5px; color: var(--text-dim); margin-top: 10px;">Línea base de afectación previa al despliegue del esquema de investigación focalizada.</p>
+        </div>
+
+        <div style="background: var(--panel); border: 1px solid var(--line); border-top: 4px solid #EF4444; padding: 26px; border-radius: 6px;">
+          <div class="kpi-badge" style="background:rgba(239, 68, 68, 0.15); color:#EF4444; border:1px solid #EF4444;">Año 2025</div>
+          <b style="font-family:'Barlow Condensed', sans-serif; font-size: 42px; color: #FFF; display: block; margin-top: 10px;">$1.717 M</b>
+          <span style="font-family:'IBM Plex Mono', monospace; font-size: 11px; color: #EF4444; text-transform: uppercase;">Costo Acumulado 2025</span>
+          <p style="font-size: 12.5px; color: var(--text-dim); margin-top: 10px;">Incluye $436M facturados de 2024 y pico crítico registrado antes de la creación del grupo.</p>
+        </div>
+
+        <div style="background: var(--panel); border: 1px solid var(--line); border-top: 4px solid #10B981; padding: 26px; border-radius: 6px;">
+          <div class="kpi-badge green">Año 2026 (A Julio)</div>
+          <b style="font-family:'Barlow Condensed', sans-serif; font-size: 42px; color: #FFF; display: block; margin-top: 10px;">$745 M</b>
+          <span style="font-family:'IBM Plex Mono', monospace; font-size: 11px; color: #10B981; text-transform: uppercase;">Afectación Controlada a Julio</span>
+          <p style="font-size: 12.5px; color: var(--text-dim); margin-top: 10px;">Tendencia de contención lograda mediante control preventivo y judicialización activa.</p>
+        </div>
+      </div>
+
+      <!-- Desglose de Impacto Clave 2025 -->
+      <div style="margin-top: 28px; background: rgba(0, 76, 151, 0.2); border: 1.5px solid var(--sos-blue-bright); border-radius: 6px; padding: 28px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size: 11px; color: var(--sos-gold); letter-spacing: 1.5px; text-transform: uppercase; font-weight:700;">Hito Táctico Informativo · Desglose 2025</span>
+            <h3 style="font-family:'Barlow Condensed', sans-serif; font-size: 30px; color: #FFF; margin-top: 4px;">Demostración de Efectividad tras la Creación del Grupo Especializado</h3>
+          </div>
+          <span class="kpi-badge green" style="font-size: 12px; padding: 6px 14px;">Inflexión de Pérdidas</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px;">
+          <div style="background: rgba(14, 26, 48, 0.8); border: 1px solid rgba(239,68,68,0.4); padding: 20px; border-radius: 4px;">
+            <div style="font-family:'IBM Plex Mono', monospace; font-size: 11px; color: #EF4444; font-weight:700;">4 MESES PREVIOS (Enero - Abril 2025)</div>
+            <div style="font-family:'Barlow Condensed', sans-serif; font-size: 36px; color: #FFF; font-weight:800; margin: 4px 0;">$751 Millones</div>
+            <p style="font-size: 13px; color: var(--text-dim);">Promedio mensual de afectación previa: <strong>$187.7 M / mes</strong> sin grupo táctico dedicado.</p>
+          </div>
+
+          <div style="background: rgba(14, 26, 48, 0.8); border: 1px solid rgba(16,185,129,0.5); padding: 20px; border-radius: 4px;">
+            <div style="font-family:'IBM Plex Mono', monospace; font-size: 11px; color: #10B981; font-weight:700;">8 MESES POSTERIORES (Mayo - Diciembre 2025)</div>
+            <div style="font-family:'Barlow Condensed', sans-serif; font-size: 36px; color: #10B981; font-weight:800; margin: 4px 0;">$514 Millones</div>
+            <p style="font-size: 13px; color: var(--text-dim);">Promedio mensual reducido a <strong>$64.2 M / mes</strong> tras implementar el grupo especializado S.O.S.</p>
+          </div>
+        </div>
+        <p style="font-size: 13.5px; color: #E0F2FE; margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 12px;">
+          💡 <strong>Resultado Demostrable:</strong> Tras la creación del equipo especializado, el costo de 8 meses ($514M) fue notablemente menor al de los 4 meses previos ($751M), representando una reducción del <strong>65.8% en el promedio mensual de pérdidas</strong>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- NUEVA SECCIÓN DE RESULTADOS DE GESTIÓN INVESTIGATIVA Y JURÍDICA -->
+  <section id="gestion-investigativa">
+    <div class="wrap">
+      <div class="eyebrow">03 · Informe Interno · Equipo de Analistas SOS</div>
+      <h2 class="disp">Resultados de la Gestión Investigativa y Jurídica</h2>
+      <p class="lede">Balance operativo y judicial acumulado para la protección integral de la infraestructura de alumbrado público mediante persecución penal estratégica y articulación institucional.</p>
+
+      <!-- Grid de Indicadores Clave de Gestión -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 36px;">
+        <div class="stat-card-box" style="border-left: 4px solid var(--sos-gold);">
+          <b>57 Hechos</b>
+          <span>Investigación Matriz 2024-2025</span>
+          <p style="font-size: 12px; color: var(--text-dim); margin-top: 8px;">Consolidación de 1 caso matriz que sistematiza denuncias formalizadas.</p>
+        </div>
+
+        <div class="stat-card-box" style="border-left: 4px solid var(--sos-blue-bright);">
+          <b>12 Casos</b>
+          <span>Capturas en Flagrancia</span>
+          <p style="font-size: 12px; color: var(--text-dim); margin-top: 8px;">16 personas capturadas y judicializadas en coordinación con Policía Nacional.</p>
+        </div>
+
+        <div class="stat-card-box" style="border-left: 4px solid #10B981;">
+          <b>20 Denuncias</b>
+          <span>Denuncias Instauradas</span>
+          <p style="font-size: 12px; color: var(--text-dim); margin-top: 8px;">12 con capturados y 8 en etapa de investigación activa.</p>
+        </div>
+
+        <div class="stat-card-box" style="border-left: 4px solid var(--lamp-soft);">
+          <b>16 Condenas</b>
+          <span>Condenas por Hurto</span>
+          <p style="font-size: 12px; color: var(--text-dim); margin-top: 8px;">Sentencias logradas por delitos a la infraestructura del servicio público.</p>
+        </div>
+      </div>
+
+      <!-- Desglose de Actividades Operativas del Equipo (241 Actividades Totales) -->
+      <div style="margin-top: 36px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        
+        <!-- Panel Izquierdo: Actividades Investigativas y Policía Judicial -->
+        <div style="background: var(--panel); border: 1px solid var(--line); padding: 28px; border-radius: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px;">
+            <h3 style="font-family:'Barlow Condensed', sans-serif; font-size: 24px; color: #FFF;">Actividades Investigativas y de Análisis</h3>
+            <span class="kpi-badge blue">121 Operaciones</span>
+          </div>
+
+          <ul style="list-style:none; display:flex; flex-direction:column; gap:10px; font-size:13px; color:var(--text-dim);">
+            <li style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
+              <span>Informes ejecutivos de recolección y análisis</span>
+              <strong style="color:var(--sos-gold);">35</strong>
+            </li>
+            <li style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
+              <span>Diligencias de entrevista de campo</span>
+              <strong style="color:var(--sos-gold);">25</strong>
+            </li>
+            <li style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
+              <span>Recolecciones de material probatorio y/o evidencia (EMP)</span>
+              <strong style="color:var(--sos-gold);">25</strong>
+            </li>
+            <li style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
+              <span>Ubicaciones de fuente humana</span>
+              <strong style="color:var(--sos-gold);">20</strong>
+            </li>
+            <li style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
+              <span>Apoyos a policía judicial & Reuniones con Fiscalía</span>
+              <strong style="color:var(--sos-gold);">36</strong>
+            </li>
+            <li style="display:flex; justify-content:space-between; padding-top:4px;">
+              <span>Ubicación testigos, retratos hablados y declaraciones</span>
+              <strong style="color:var(--sos-gold);">5</strong>
+            </li>
+          </ul>
+
+          <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--text-dim);">Actividades de Policía Judicial Asignadas:</span>
+            <span class="kpi-badge gold" style="font-size:11px;">26 Actividades</span>
+          </div>
+        </div>
+
+        <!-- Panel Derecho: Actividades Jurídicas y Avances de Procesos -->
+        <div style="background: var(--panel); border: 1px solid var(--line); padding: 28px; border-radius: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px;">
+            <h3 style="font-family:'Barlow Condensed', sans-serif; font-size: 24px; color: #FFF;">Gestión Jurídica y Avance de Procesos</h3>
+            <span class="kpi-badge green">94 Acciones Judiciales</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+            <div style="background:var(--panel-2); padding:14px; border-radius:4px; text-align:center;">
+              <b style="font-family:'Barlow Condensed', sans-serif; font-size:28px; color:#FFF; display:block;">21</b>
+              <span style="font-size:11px; color:var(--sos-gold); font-family:'IBM Plex Mono', monospace;">Denuncias Penales</span>
+            </div>
+            <div style="background:var(--panel-2); padding:14px; border-radius:4px; text-align:center;">
+              <b style="font-family:'Barlow Condensed', sans-serif; font-size:28px; color:#FFF; display:block;">70~</b>
+              <span style="font-size:11px; color:var(--sos-gold); font-family:'IBM Plex Mono', monospace;">Impulsos Procesales</span>
+            </div>
+          </div>
+
+          <h4 style="font-family:'Barlow Condensed', sans-serif; font-size: 18px; color: var(--sos-gold); margin-bottom: 8px;">Estado de Procesos Judiciales:</h4>
+          <ul style="list-style:none; display:flex; flex-direction:column; gap:8px; font-size:12.5px; color:var(--text-dim);">
+            <li style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:4px;">
+              <span>En etapa de Juicios (Acusación)</span>
+              <strong style="color:#FFF;">12 Casos</strong>
+            </li>
+            <li style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:4px;">
+              <span>En etapa de Investigación (Policía Judicial)</span>
+              <strong style="color:#FFF;">01 Caso</strong>
+            </li>
+            <li style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:4px;">
+              <span>Noticia Criminal · Actos Urgentes</span>
+              <strong style="color:#FFF;">01 Caso</strong>
+            </li>
+            <li style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:4px;">
+              <span>Recuperaciones exitosas de elementos de la empresa</span>
+              <strong style="color:#10B981;">11 Casos</strong>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Factor Analysis Section -->
+  <section id="factores">
+    <div class="wrap">
+      <div class="eyebrow">04 · Análisis de Causa Raíz</div>
+      <h2 class="disp">Dimensiones Estructurales Evaluadas</h2>
+      <p class="lede">Factores analizados para la formulación del plan de supervisión e implementación táctica de S.O.S Seguridad Privada.</p>
+      
+      <div class="factor-grid">
+        <details class="fcard" open><summary><span><span class="n">01</span>Factor Económico-Informal</span></summary>
+          <ul><li>Demanda de materiales ferrosos y cobre en el mercado informal</li><li>Ubicación de centros no regulados de acopio de metales</li><li>Facilidad de liquidación inmediata de insumos sustraídos</li></ul></details>
+        <details class="fcard"><summary><span><span class="n">02</span>Factor Social y Entorno</span></summary>
+          <ul><li>Presencia de actores flotantes en zonas deshabitadas o perimetrales</li><li>Baja percepción de riesgo de captura durante la madrugada</li><li>Puntos ciegos comunitarios por reducción de tránsito peatonal</li></ul></details>
+        <details class="fcard"><summary><span><span class="n">03</span>Factor Geográfico Táctico</span></summary>
+          <ul><li>Extensiones de red en sectores perimetrales de la ciudad</li><li>Lotes desocupados adyacentes a vías principales de escape</li><li>Corredores desiertos en horarios de menor actividad comercial</li></ul></details>
+        <details class="fcard"><summary><span><span class="n">04</span>Factor Vulnerabilidad Técnica</span></summary>
+          <ul><li>Cajas de control convencionales que requieren cerramiento reinforced</li><li>Puntos de corte accesibles desde nivel de piso en infraestructura previa</li><li>Oportunidad de incorporar sensores de monitoreo remoto</li></ul></details>
+        <details class="fcard"><summary><span><span class="n">05</span>Factor Cobertura Operativa</span></summary>
+          <ul><li>Rutas de vigilancia tradicional con tiempos de ciclo extendidos</li><li>Necesidad de patrullaje motorizado flexible de respuesta rápida</li><li>Horarios críticos de concentración de eventos nocturnos</li></ul></details>
+        <details class="fcard"><summary><span><span class="n">06</span>Factor Articulación Judicial</span></summary>
+          <ul><li>Rutas de denuncia individualizadas sin consolidación de patrón</li><li>Necesidad de aportar acervo probatorio unificado a fiscalías</li><li>Alineación directa con los cuadrantes de la Policía Nacional</li></ul></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Costos Ocultos Section -->
+  <section id="costos-ocultos" style="background: var(--bg-alt);">
+    <div class="wrap">
+      <div class="eyebrow">05 · Impacto Financiero y Operativo</div>
+      <h2 class="disp">Análisis del Costo Oculto por Vandalismo e Incidencias</h2>
+      <p class="lede">El impacto real de las afectaciones en la red va más allá del valor comercial del cable o componente sustraído. Existen cuatro dimensiones críticas de <strong>Costo Oculto</strong> que erosionan la eficiencia operativa y la imagen corporativa:</p>
+      
+      <div class="costo-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 36px;">
+        <div style="background: var(--panel); border: 1px solid var(--line); border-left: 4px solid #EF4444; padding: 26px; border-radius: 6px;">
+          <div style="font-family:'IBM Plex Mono', monospace; font-size: 11px; color: #EF4444; letter-spacing: 1.5px; text-transform: uppercase; font-weight:700;">01 · Impacto Reputacional</div>
+          <h3 style="font-family:'Barlow Condensed', sans-serif; font-size: 26px; margin: 8px 0; color: #FFF;">Imagen de la Empresa</h3>
+          <p style="font-size: 13.5px; color: var(--text-dim); line-height: 1.6;">El deterioro del espacio público por falta de iluminación genera una percepción negativa generalizada en la ciudadanía, afectando la credibilidad e imagen de la entidad ante entes reguladores y opinión pública.</p>
+        </div>
+
+        <div style="background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--sos-gold); padding: 26px; border-radius: 6px;">
+          <div style="font-family:'IBM Plex Mono', monospace; font-size: 11px; color: var(--sos-gold); letter-spacing: 1.5px; text-transform: uppercase; font-weight:700;">02 · Carga en Atención al Usuario</div>
+          <h3 style="font-family:'Barlow Condensed', sans-serif; font-size: 26px; margin: 8px 0; color: #FFF;">Saturación por Quejas y Peticiones</h3>
+          <p style="font-size: 13.5px; color: var(--text-dim); line-height: 1.6;">Incremento exponencial en el volumen de reclamos y PQRS por zonas reiteradamente vandalizadas. Esto sobrecarga los canales de atención y exige recursos administrativos continuos para su radicación y respuesta.</p>
+        </div>
+
+        <div style="background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--sos-blue-bright); padding: 26px; border-radius: 6px;">
+          <div style="font-family:'IBM Plex Mono', monospace; font-size: 11px; color: var(--sos-blue-bright); letter-spacing: 1.5px; text-transform: uppercase; font-weight:700;">03 · Ineficiencia Logística</div>
+          <h3 style="font-family:'Barlow Condensed', sans-serif; font-size: 26px; margin: 8px 0; color: #FFF;">Desplazamientos Continuos</h3>
+          <p style="font-size: 13.5px; color: var(--text-dim); line-height: 1.6;">Gasto operativo recurrente derivado de traslados no planificados de cuadrillas, inspecciones diagnósticas reiteradas, uso de vehículos y consumo innecesario de combustible para revisar un mismo tramo expuesto.</p>
+        </div>
+
+        <div style="background: var(--panel); border: 1px solid var(--line); border-left: 4px solid #10B981; padding: 26px; border-radius: 6px;">
+          <div style="font-family:'IBM Plex Mono', monospace; font-size: 11px; color: #10B981; letter-spacing: 1.5px; text-transform: uppercase; font-weight:700;">04 · Continuidad e Infraestructura</div>
+          <h3 style="font-family:'Barlow Condensed', sans-serif; font-size: 26px; margin: 8px 0; color: #FFF;">Reparación e Interrupción del Servicio</h3>
+          <p style="font-size: 13.5px; color: var(--text-dim); line-height: 1.6;">Aumento del presupuesto en reposición de materiales (cables, armarios, luminarias) sumado al perjuicio comunitario debido a los prolongados lapsos de interrupción del servicio de alumbrado mientras se completa la reparación.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Improvements Section -->
+  <section id="mejoras">
+    <div class="wrap">
+      <div class="eyebrow">06 · Oportunidades de Mejora</div>
+      <h2 class="disp">Estrategias de Optimización Operativa</h2>
+      <p class="lede">Ejes de transformación técnica y estratégica para fortalecer el control de la red y maximizar la efectividad del servicio de supervisión S.O.S.</p>
+
+      <div class="improve-grid">
+        <div class="improve-card">
+          <span class="tag-cat">Operativo / Táctico</span>
+          <h3>Supervisión Dinámica S.O.S</h3>
+          <p class="desc">Transición de esquemas estáticos a rutas de patrullaje motorizado inteligente, priorizando sectores críticos según variables del entorno y horas de vulnerabilidad.</p>
+        </div>
+        <div class="improve-card">
+          <span class="tag-cat">Técnico / Físico</span>
+          <h3>Protección de Infraestructura</h3>
+          <p class="desc">Estandarización de cerramientos antivandálicos, elevación de cajas de control y adopción de sellos de seguridad de alta resistencia.</p>
+        </div>
+        <div class="improve-card">
+          <span class="tag-cat">Tecnológico / Control</span>
+          <h3>Trazabilidad Digital S.O.S</h3>
+          <p class="desc">Implementación de seguimiento vía GPS en tiempo real para unidades motorizadas con reporte georreferenciado de novedades durante las rondas.</p>
+        </div>
+      </div>
+
+      <div class="insight">
+        <b>Sinergia Operativa S.O.S Seguridad Privada:</b> La integración de presencia física preventiva en territorio con un canal de articulación directa con la Policía Nacional y la Fiscalía General de la Nación permite cerrar la ventana de oportunidad delictiva, asegurar la recolección probatoria en tiempo récord y sostener las 16 condenas y capturas proyectadas.
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- TAB 2: PROPUESTA DE IMPLEMENTACIÓN NOCTURNA -->
+<div id="tab-content-prop" class="tab-pane">
+
+  <section id="propuesta">
+    <div class="wrap">
+      <div class="eyebrow">04 · Propuesta Operativa Zonas</div>
+      <h2 class="disp"> Supervisión Nocturna S.O.S</h2>
+      
+      <div class="time-badge">
+        ⏱ Horarios Operativos: 18:00 a 06:00 hrs (Turno Nocturno S.O.S 12 Horas)
+      </div>
+
+      <p class="lede">Delimitación territorial de las 3 zonas completas. Cada supervisor de S.O.S Seguridad Privada cuenta con cobertura integral de su zona asignada para patrullaje disuasivo, control técnico e inspección física de registros. Ademas, se contara con un supervisor extra para cubrir los descansos de cada supervisor.</p>
+
+      <!-- Interactive Proposal Map -->
+      <div class="propuesta-map-container">
+        <div class="map-filters" id="zone-filters">
+          <button data-zone="all" class="active">Ver las 3 Geocercas Completas</button>
+          <button data-zone="z1">Geocerca 1: Norte / Riomar & Vía 40</button>
+          <button data-zone="z2">Geocerca 2: Suroccidente & Juan Mina</button>
+          <button data-zone="z3">Geocerca 3: Suroriente & Corredor Portuario</button>
+        </div>
+        <div id="map-propuesta"></div>
+        <div class="map-legend">
+          <div class="item"><span class="swatch" style="background:#FF0033; box-shadow: 0 0 10px #FF0033;"></span><b style="color:#FF0033;">🔴 Punto Crítico Reincidente</b></div>
+          <div class="item"><span class="swatch" style="background:#38BDF8;"></span>Geocerca 1 · Norte</div>
+          <div class="item"><span class="swatch" style="background:#10B981;"></span>Geocerca 2 · Suroccidente</div>
+          <div class="item"><span class="swatch" style="background:#FFC700;"></span>Geocerca 3 · Suroriente</div>
+          <div class="item" style="margin-left:auto; color:var(--sos-gold); font-weight:700;">Patrullaje Activo S.O.S 18:00 - 06:00 hrs</div>
+        </div>
+      </div>
+
+      <!-- Zone Cards Grid -->
+      <div class="zone-cards-grid" id="zone-cards">
+        <div class="zone-card active" data-zone="z1">
+          <span class="zone-tag" style="background: rgba(56,189,248,0.18); color: #38BDF8;">Geocerca 01 · Supervisor Norte</span>
+          <h4>Norte, Riomar & Vía 40</h4>
+          <p><strong>Perímetro Táctico:</strong> Vía 40, Las Flores, Riomar, Alto Prado, El Golf y Corredor Industrial Norte.</p>
+          <ul>
+            <li><strong>Asignación:</strong> 1 Supervisor S.O.S dedicado exclusivamente a la Geocerca Norte.</li>
+            <li><strong>Horario:</strong> 18:00 a 06:00 hrs (Patrullaje motorizado continuo).</li>
+            <li><strong>Eje Crítico:</strong> Protección de transformadores industriales y tendidos de alta capacidad en Vía 40.</li>
+          </ul>
+        </div>
+
+        <div class="zone-card" data-zone="z2">
+          <span class="zone-tag" style="background: rgba(16,185,129,0.18); color: #10B981;">Geocerca 02 · Supervisor Suroccidente</span>
+          <h4>Suroccidente & Juan Mina</h4>
+          <p><strong>Perímetro Táctico:</strong> Circunvalar Suroccidente, Cordialidad, Las Malvinas, Santa María, Gardenias y Juan Mina.</p>
+          <ul>
+            <li><strong>Asignación:</strong> 1 Supervisor S.O.S dedicado exclusivamente a la Geocerca Suroccidente.</li>
+            <li><strong>Horario:</strong> 18:00 a 06:00 hrs (Rondas de barrido en cuadrantes).</li>
+            <li><strong>Eje Crítico:</strong> Rondas intensivas en circuitos de parques, gabinetes de control y conectores viales.</li>
+          </ul>
+        </div>
+
+        <div class="zone-card" data-zone="z3">
+          <span class="zone-tag" style="background: rgba(255,199,0,0.18); color: #FFC700;">Geocerca 03 · Supervisor Suroriente</span>
+          <h4>Suroriente & Corredor Portuario</h4>
+          <p><strong>Perímetro Táctico:</strong> Corredor Portuario, Calle 30, Rebolo, San Roque, Centro y Accesos Puente Pumarejo.</p>
+          <ul>
+            <li><strong>Asignación:</strong> 1 Supervisor S.O.S dedicado exclusivamente a la Geocerca Suroriente.</li>
+            <li><strong>Horario:</strong> 18:00 a 06:00 hrs (Monitoreo disuasivo nocturno).</li>
+            <li><strong>Eje Crítico:</strong> Control de accesos a puentes, vías de escape rápido y arterias comerciales.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Proposal Pillars -->
+      <div style="margin-top: 56px;">
+        <div class="eyebrow">Estructura de Trabajo S.O.S Seguridad Privada</div>
+        <h3 class="disp" style="font-size: 34px; margin-bottom: 20px;">Pilares del Modelo de Supervisión por Geocercas</h3>
+        <div class="pillars">
+          <div class="pillar">
+            <div class="pnum">PILAR 01</div>
+            <h3>Gestión Investigativa y Consolidación</h3>
+            <ul>
+              <li><b>Unificación de casos:</b> Consolidación de matrices probatorias (Caso Matriz 57 hechos) para aportar elementos sustanciales a las autoridades.</li>
+              <li><b>Acompañamiento técnico:</b> Inspección técnica de campo junto a Alubaq para la recolección de evidencia física.</li>
+              <li><b>Seguimiento procesal:</b> Trabajo coordinado con los despachos judiciales para impulsar órdenes de captura.</li>
+            </ul>
+          </div>
+
+          <div class="pillar">
+            <div class="pnum">PILAR 02</div>
+            <h3>Estrategia Preventiva S.O.S (18:00-06:00)</h3>
+            <ul>
+              <li><b>Presencia disuasiva:</b> Rondas constantes con unidades motorizadas en cada geocerca asignada.</li>
+              <li><b>Verificación física:</b> Revisión de integridad en tapas, armarios de control y tendidos expuestos.</li>
+              <li><b>Enlace comunitario:</b> Comunicación con líderes de sector y CAI para reporte de movimientos sospechosos.</li>
+            </ul>
+          </div>
+
+          <div class="pillar">
+            <div class="pnum">PILAR 03</div>
+            <h3>Articulación Interinstitucional</h3>
+            <ul>
+              <li><b>Coordinación de cuadrantes:</b> Protocolo de comunicación inmediata en caso de detectarse actividad irregular.</li>
+              <li><b>Cierre de rutas:</b> Esquema de bloqueo coordinado ante intentos de evacuación en corredores viales.</li>
+              <li><b>Verificación en centros de recepción:</b> Trabajo conjunto con autoridades para supervisión de acopios e inspección de chatarrerías.</li>
+            </ul>
+          </div>
+
+          <div class="pillar">
+            <div class="pnum">PILAR 04</div>
+            <h3>Monitoreo GPS y Trazabilidad S.O.S</h3>
+            <ul>
+              <li><b>Auditoría de recorridos:</b> Validación por GPS de la permanencia del supervisor en su geocerca asignada.</li>
+              <li><b>Bitácora digital S.O.S:</b> Registro de novedades, riesgos identificados y estado físico de la red.</li>
+              <li><b>Evaluación de cobertura:</b> Verificación del cumplimiento de rondas nocturnas entre 18:00 y 06:00 hrs.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="proyeccion">
+    <div class="wrap">
+      <div class="eyebrow">05 · Resultados Esperados</div>
+      <h2 class="disp">Impacto Operativo Proyectado</h2>
+      <p class="lede">Logros fundamentales orientados a la sostenibilidad del servicio y la protección del espacio público.</p>
+
+      <div class="proj-grid">
+        <div class="proj-card">
+          <h3>Neutralización del Hurto</h3>
+          <p>Disminución sostenida de eventos de vandalismo mediante disuasión efectiva y respuesta rápida en cada geocerca.</p>
+        </div>
+        <div class="proj-card">
+          <h3>Continuidad del Servicio</h3>
+          <p>Garantía de iluminación permanente en parques y vías principales durante la jornada nocturna (18:00 - 06:00 hrs).</p>
+        </div>
+        <div class="proj-card">
+          <h3>Protección Patrimonial S.O.S</h3>
+          <p>Preservación del equipamiento público y reducción drástica de costos reactivos por reposición de material.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<section id="cierre">
+  <div class="wrap">
+    <div class="eyebrow" style="justify-content:center;">S.O.S SEGURIDAD PRIVADA LTDA.</div>
+    <h2 class="disp">Hacia una red de alumbrado continuo, segura y protegida.</h2>
+    <p class="lede">El despliegue de este modelo de supervisión por geocercas brinda las herramientas tácticas, investigativas y operativas para salvaguardar la infraestructura del distrito.</p>
+    <div class="cta-row">
+      <a href="javascript:void(0)" onclick="switchMainTab('diag')" class="cta primary">Ver Diagnóstico e Informe Judicial</a>
+      <a href="javascript:void(0)" onclick="switchMainTab('prop')" class="cta ghost">Ver Propuesta por Geocercas</a>
+    </div>
+  </div>
+</section>
+
+<footer>S.O.S SEGURIDAD PRIVADA LTDA. · Su Oportuno Servicio Ltda. (Since 1957) · Barranquilla</footer>
+
+<script>
+function switchMainTab(tabName) {
+  const diagPane = document.getElementById('tab-content-diag');
+  const propPane = document.getElementById('tab-content-prop');
+  const btnDiag = document.getElementById('tab-btn-diag');
+  const btnProp = document.getElementById('tab-btn-prop');
+
+  if (tabName === 'diag') {
+    if (diagPane) diagPane.classList.add('active');
+    if (propPane) propPane.classList.remove('active');
+    if (btnDiag) btnDiag.classList.add('active');
+    if (btnProp) btnProp.classList.remove('active');
+    
+    // Invalidate map size so Leaflet renders correctly upon tab visibility switch
+    setTimeout(() => {
+      if (typeof mainMap !== 'undefined') mainMap.invalidateSize();
+    }, 150);
+  } else if (tabName === 'prop') {
+    if (propPane) propPane.classList.add('active');
+    if (diagPane) diagPane.classList.remove('active');
+    if (btnProp) btnProp.classList.add('active');
+    if (btnDiag) btnDiag.classList.remove('active');
+    
+    setTimeout(() => {
+      if (typeof propMap !== 'undefined') propMap.invalidateSize();
+    }, 150);
+  }
+}
+
+// Scroll progress bar listener
+window.addEventListener('scroll', () => {
+  const prog = document.getElementById('progbar');
+  if (prog) {
+    const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = (window.scrollY / totalHeight) * 100;
+    prog.style.width = `${progress}%`;
+  }
+});
+
+// Points data for spatial display with flagged Reincidence (Alta Reincidencia de Hurto en Rojo Vivo #FF0033)
+const GEODATA = [
+  {"id": 1, "zone": "z2", "tipo": "Avenida", "direccion": "Circunvalar con Carrera 38", "nombre": "Avenida Circunvalar", "lat": 10.98252, "lon": -74.83624, "reincidente": true},
+  {"id": 2, "zone": "z2", "tipo": "Parque", "direccion": "Calle 99 #8C", "nombre": "Cancha Las Malvinas", "lat": 10.95322, "lon": -74.82978, "reincidente": true},
+  {"id": 3, "zone": "z1", "tipo": "Parque", "direccion": "Carrera 57 #79", "nombre": "Parque Ezequiel Rosado", "lat": 11.00751, "lon": -74.80908, "reincidente": false},
+  {"id": 4, "zone": "z2", "tipo": "Parque", "direccion": "Calle 80 #1C", "nombre": "Parque Santa María", "lat": 10.93435, "lon": -74.82090, "reincidente": false},
+  {"id": 5, "zone": "z1", "tipo": "Avenida", "direccion": "Vía 40 con Calle 84", "nombre": "Vía 40 - Puerta de Oro", "lat": 11.02556, "lon": -74.80317, "reincidente": true},
+  {"id": 6, "zone": "z1", "tipo": "Parque", "direccion": "Carrera 59C con Calle 81", "nombre": "Parque Cristo Rey", "lat": 11.01053, "lon": -74.80788, "reincidente": false},
+  {"id": 7, "zone": "z1", "tipo": "Avenida", "direccion": "Circunvalar con Carrera 43", "nombre": "Avenida Circunvalar - Tramo Norte", "lat": 10.99146, "lon": -74.83756, "reincidente": false},
+  {"id": 8, "zone": "z1", "tipo": "Parque", "direccion": "Calle 84 con Carrera 42F", "nombre": "Parque Caridad del Cobre", "lat": 10.99606, "lon": -74.82164, "reincidente": false},
+  {"id": 9, "zone": "z2", "tipo": "Parque", "direccion": "Carrera 3 #94", "nombre": "Parque Solar Gardenias", "lat": 10.93563, "lon": -74.82924, "reincidente": false},
+  {"id": 10, "zone": "z1", "tipo": "Parque", "direccion": "Calle 77 con Carrera 55", "nombre": "Parque El Golf", "lat": 11.00800, "lon": -74.80889, "reincidente": false},
+  {"id": 11, "zone": "z2", "tipo": "Avenida", "direccion": "Calle 109 con Carrera 32", "nombre": "Avenida Circunvalar - Tramo Suroccidente", "lat": 10.97426, "lon": -74.83604, "reincidente": true},
+  {"id": 12, "zone": "z3", "tipo": "Parque", "direccion": "Calle 47 con Carrera 56", "nombre": "Entorno Estadio Édgar Rentería", "lat": 10.99547, "lon": -74.78450, "reincidente": false},
+  {"id": 13, "zone": "z1", "tipo": "Avenida", "direccion": "Carrera 46 con Calle 70", "nombre": "Corredor Carrera 46", "lat": 10.99325, "lon": -74.80350, "reincidente": false},
+  {"id": 14, "zone": "z3", "tipo": "Avenida", "direccion": "Corredor Portuario", "nombre": "Corredor Portuario", "lat": 10.98535, "lon": -74.77351, "reincidente": true},
+  {"id": 15, "zone": "z3", "tipo": "Calle", "direccion": "Calle 30 entre Carrera 10 y 35", "nombre": "Corredor Calle 30", "lat": 10.95992, "lon": -74.78487, "reincidente": true},
+  {"id": 16, "zone": "z3", "tipo": "Parque", "direccion": "Carrera 58 con Calle 64", "nombre": "Parque Santander", "lat": 10.99626, "lon": -74.79505, "reincidente": false},
+  {"id": 17, "zone": "z2", "tipo": "Avenida", "direccion": "Calle 98 con Carrera 62", "nombre": "Avenida Cordialidad - Gardenias", "lat": 10.94416, "lon": -74.82771, "reincidente": false},
+  {"id": 18, "zone": "z1", "tipo": "Calle", "direccion": "Calle 72 con Carrera 38", "nombre": "Corredor Comercial Calle 72", "lat": 10.98311, "lon": -74.81237, "reincidente": false},
+  {"id": 19, "zone": "z3", "tipo": "Parque", "direccion": "Carrera 26 con Calle 21", "nombre": "Malecón de Rebolo", "lat": 10.96438, "lon": -74.77761, "reincidente": true},
+  {"id": 20, "zone": "z3", "tipo": "Puente", "direccion": "Ruta Nacional 90", "nombre": "Puente Pumarejo", "lat": 10.95047, "lon": -74.75647, "reincidente": true},
+  {"id": 21, "zone": "z1", "tipo": "Parque", "direccion": "Carrera 42F con Calle 80", "nombre": "Parque Sagrado Corazón", "lat": 10.99354, "lon": -74.81834, "reincidente": false},
+  {"id": 22, "zone": "z2", "tipo": "Parque", "direccion": "Sector Juan Mina", "nombre": "Cancha Juan Mina", "lat": 10.95610, "lon": -74.89443, "reincidente": false},
+  {"id": 23, "zone": "z1", "tipo": "Parque", "direccion": "Avenida del Río", "nombre": "Malecón del Río", "lat": 11.01005, "lon": -74.78204, "reincidente": false},
+  {"id": 24, "zone": "z3", "tipo": "Puente", "direccion": "Estructura de Conectividad Oriente", "nombre": "Puente Pumarejo - Tramo Acceso", "lat": 10.95050, "lon": -74.75507, "reincidente": true}
+];
+
+const MAP_COLORS = { Parque:'#FFC700', Avenida:'#0072CE', Calle:'#10B981', Puente:'#CBD5E1' };
+
+function createMapInstance(elementId, interactive) {
+  const map = L.map(elementId, {
+    zoomControl: interactive,
+    dragging: interactive,
+    scrollWheelZoom: false,
+    doubleClickZoom: interactive,
+    boxZoom: interactive,
+    keyboard: interactive,
+    attributionControl: interactive
+  }).setView([10.978, -74.808], 12);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19
+  }).addTo(map);
+
+  return map;
+}
+
+// Background map on hero
+const heroMap = createMapInstance('hero-map', false);
+GEODATA.forEach(d => {
+  const color = d.reincidente ? '#FF0033' : MAP_COLORS[d.tipo];
+  L.circleMarker([d.lat, d.lon], {
+    radius: d.reincidente ? 6 : 4,
+    color: color,
+    fillColor: color,
+    fillOpacity: 0.9,
+    weight: 0
+  }).addTo(heroMap);
+});
+
+// Interactive main map (Tab 1)
+const mainMap = createMapInstance('map', true);
+let mapMarkers = [];
+
+GEODATA.forEach(d => {
+  const isReincidente = d.reincidente;
+  const markerColor = isReincidente ? '#FF0033' : MAP_COLORS[d.tipo];
+  const radius = isReincidente ? 10 : 7;
+  
+  const marker = L.circleMarker([d.lat, d.lon], {
+    radius: radius,
+    color: '#FFFFFF',
+    weight: isReincidente ? 2.5 : 1.5,
+    fillColor: markerColor,
+    fillOpacity: 1.0,
+    className: isReincidente ? 'reincidente-marker' : ''
+  }).bindPopup(
+    (isReincidente ? `<div class="badge-reincidente">⚠️ Alta Reincidencia de Hurto</div><br>` : '') +
+    `<div class="popup-t">${d.tipo} · Punto S.O.S</div>` +
+    `<div class="popup-n">${d.nombre}</div>` +
+    `<div class="popup-d">${d.direccion}<br>${isReincidente ? '<strong style="color:#FF0033;">Sector Prioritario por Vandalismo Recurrente</strong>' : 'Zona de Patrullaje Preventivo S.O.S'}</div>`
+  );
+  marker._tipo = d.tipo;
+  marker._reincidente = isReincidente;
+  marker.addTo(mainMap);
+  mapMarkers.push(marker);
+});
+
+// Map filtering logic (Tab 1)
+document.getElementById('mapfilters').addEventListener('click', (e) => {
+  if (e.target.tagName !== 'BUTTON') return;
+  const filter = e.target.dataset.f;
+  
+  document.querySelectorAll('#mapfilters button').forEach(btn => btn.classList.remove('active'));
+  e.target.classList.add('active');
+
+  mapMarkers.forEach(m => {
+    if (filter === 'all') {
+      if (!mainMap.hasLayer(m)) m.addTo(mainMap);
+    } else if (filter === 'Reincidente') {
+      if (m._reincidente) {
+        if (!mainMap.hasLayer(m)) m.addTo(mainMap);
+      } else {
+        if (mainMap.hasLayer(m)) mainMap.removeLayer(m);
+      }
+    } else if (m._tipo === filter) {
+      if (!mainMap.hasLayer(m)) m.addTo(mainMap);
+    } else {
+      if (mainMap.hasLayer(m)) mainMap.removeLayer(m);
+    }
+  });
+});
+
+const propMap = createMapInstance('map-propuesta', true);
+
+// DEFINICIÓN DE LAS 3 GEOCERCAS CON TODOS LOS PUNTOS DE GEODATA INCLUIDOS
+const GEOFENCES = {
+  z1: {
+    nombre: "Geocerca 01 · Supervisor S.O.S Norte",
+    supervisor: "Supervisor S.O.S 01",
+    color: "#38BDF8",
+    polygon: [
+      [11.048, -74.825],
+      [11.025, -74.798],
+      [11.000, -74.780],
+      [10.985, -74.785],
+      [10.980, -74.810],
+      [10.995, -74.835],
+      [11.020, -74.845]
+    ],
+    puntos: GEODATA.filter(d => d.zone === 'z1')
+  },
+  z2: {
+    nombre: "Geocerca 02 · Supervisor S.O.S Suroccidente",
+    supervisor: "Supervisor S.O.S 02",
+    color: "#10B981",
+    polygon: [
+      [10.995, -74.835],
+      [10.980, -74.810],
+      [10.950, -74.815],
+      [10.930, -74.835],
+      [10.940, -74.900],
+      [10.970, -74.890]
+    ],
+    puntos: GEODATA.filter(d => d.zone === 'z2')
+  },
+  z3: {
+    nombre: "Geocerca 03 · Supervisor S.O.S Suroriente",
+    supervisor: "Supervisor S.O.S 03",
+    color: "#FFC700",
+    polygon: [
+      [10.985, -74.785],
+      [10.990, -74.770],
+      [10.965, -74.750],
+      [10.940, -74.750],
+      [10.950, -74.785],
+      [10.980, -74.810]
+    ],
+    puntos: GEODATA.filter(d => d.zone === 'z3')
+  }
+};
+
+const geofenceLayers = {};
+
+Object.keys(GEOFENCES).forEach(key => {
+  const gf = GEOFENCES[key];
+  
+  // Polygon layer
+  const poly = L.polygon(gf.polygon, {
+    color: gf.color,
+    fillColor: gf.color,
+    fillOpacity: 0.22,
+    weight: 2,
+    dashArray: '6, 6'
+  }).bindPopup(
+    `<div class="popup-t">${gf.nombre}</div>` +
+    `<div class="popup-n">${gf.supervisor}</div>` +
+    `<div class="popup-d">Patrullaje nocturno asignado 18:00 - 06:00 hrs.<br>Control S.O.S de infraestructura en tiempo real.</div>`
+  );
+
+  // Markers inside geofence
+  const markerGroup = L.layerGroup();
+  gf.puntos.forEach(pt => {
+    const isReincidente = pt.reincidente;
+    const ptColor = isReincidente ? '#FF0033' : gf.color;
+
+    L.circleMarker([pt.lat, pt.lon], {
+      radius: isReincidente ? 9 : 6,
+      color: '#FFFFFF',
+      weight: isReincidente ? 2.5 : 1.5,
+      fillColor: ptColor,
+      fillOpacity: 1.0,
+      className: isReincidente ? 'reincidente-marker' : ''
+    }).bindPopup(
+      (isReincidente ? `<div class="badge-reincidente">⚠️ Alta Reincidencia de Hurto</div><br>` : '') +
+      `<div class="popup-t">${gf.nombre}</div>` +
+      `<div class="popup-n">${pt.nombre}</div>` +
+      `<div class="popup-d">${isReincidente ? '<strong style="color:#FF0033;">Punto Crítico con Afectaciones Recurrentes</strong>' : 'Punto S.O.S de Monitoreo Nocturno'}</div>`
+    ).addTo(markerGroup);
+  });
+
+  geofenceLayers[key] = { polygon: poly, markers: markerGroup, color: gf.color };
+  poly.addTo(propMap);
+  markerGroup.addTo(propMap);
+});
+
+// Filter Geofences Map by Zone buttons
+function filterPropMap(zoneKey) {
+  document.querySelectorAll('#zone-filters button').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.zone-card').forEach(card => card.classList.remove('active'));
+
+  const activeBtn = document.querySelector(`#zone-filters button[data-zone="${zoneKey}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const activeCard = document.querySelector(`.zone-card[data-zone="${zoneKey}"]`);
+  if (activeCard) activeCard.classList.add('active');
+
+  if (zoneKey === 'all') {
+    Object.keys(geofenceLayers).forEach(k => {
+      if (!propMap.hasLayer(geofenceLayers[k].polygon)) propMap.addLayer(geofenceLayers[k].polygon);
+      if (!propMap.hasLayer(geofenceLayers[k].markers)) propMap.addLayer(geofenceLayers[k].markers);
+    });
+    propMap.setView([10.978, -74.808], 12);
+  } else {
+    Object.keys(geofenceLayers).forEach(k => {
+      if (k === zoneKey) {
+        if (!propMap.hasLayer(geofenceLayers[k].polygon)) propMap.addLayer(geofenceLayers[k].polygon);
+        if (!propMap.hasLayer(geofenceLayers[k].markers)) propMap.addLayer(geofenceLayers[k].markers);
+        propMap.fitBounds(geofenceLayers[k].polygon.getBounds(), { padding: [30, 30] });
+      } else {
+        if (propMap.hasLayer(geofenceLayers[k].polygon)) propMap.removeLayer(geofenceLayers[k].polygon);
+        if (propMap.hasLayer(geofenceLayers[k].markers)) propMap.removeLayer(geofenceLayers[k].markers);
+      }
+    });
+  }
+}
+
+// Event Listeners for Proposal Map Filters & Cards
+document.getElementById('zone-filters').addEventListener('click', (e) => {
+  if (e.target.tagName !== 'BUTTON') return;
+  filterPropMap(e.target.dataset.zone);
+});
+
+document.getElementById('zone-cards').addEventListener('click', (e) => {
+  const card = e.target.closest('.zone-card');
+  if (!card) return;
+  filterPropMap(card.dataset.zone);
+});
+</script>
+</body>
+</html>
