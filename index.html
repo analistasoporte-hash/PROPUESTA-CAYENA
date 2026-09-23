@@ -238,6 +238,20 @@
     background: transparent; border: 1px solid var(--line); color: var(--text-dim); padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: .15s;
   }
   .map-filters button.active, .map-filters button:hover { border-color: var(--sos-gold); color: var(--sos-gold); background: var(--sos-gold-dim); }
+  .scenario-switch { display:flex; gap:10px; flex-wrap:wrap; margin:24px 0 10px; }
+  .scenario-btn { flex:1; min-width:240px; padding:16px 18px; border:1px solid var(--line); border-radius:6px; background:var(--panel); color:var(--text-dim); cursor:pointer; text-align:left; transition:.2s; }
+  .scenario-btn strong { display:block; color:#fff; font-family:'Barlow Condensed',sans-serif; font-size:24px; }
+  .scenario-btn span { font-size:11px; font-family:'IBM Plex Mono',monospace; }
+  .scenario-btn.active { border-color:var(--sos-gold); background:var(--sos-gold-dim); box-shadow:0 0 18px rgba(255,199,0,.12); }
+  .scenario-note { margin:12px 0 20px; padding:14px 16px; border-left:3px solid var(--sos-gold); background:var(--panel-2); color:var(--text-dim); font-size:13px; line-height:1.55; }
+  .scenario-panel { display:none; }
+  .scenario-panel.active { display:block; }
+  .cost-compare { display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); margin-top:28px; border:1px solid var(--line); }
+  .cost-box { background:var(--panel); padding:24px; }
+  .cost-box h4 { color:#fff; font-family:'Barlow Condensed',sans-serif; font-size:25px; margin:0 0 8px; }
+  .cost-box p { color:var(--text-dim); margin:0; line-height:1.5; font-size:13px; }
+  .cost-box.highlight { border-top:3px solid var(--sos-gold); }
+  @media(max-width:760px){ .cost-compare{grid-template-columns:1fr;} .scenario-btn{min-width:100%;} }
 
   /* Estilos para Puntos de Alta Reincidencia (Rojo Vivo) */
   .badge-reincidente {
@@ -783,7 +797,15 @@
         ⏱ Horarios Operativos: 18:00 a 06:00 hrs (Turno Nocturno S.O.S 12 Horas)
       </div>
 
-      <p class="lede">Delimitación territorial de las 3 zonas completas. Cada supervisor de S.O.S Seguridad Privada cuenta con cobertura integral de su zona asignada para patrullaje disuasivo, control técnico e inspección física de registros. Ademas, se contara con un supervisor extra para cubrir los descansos de cada supervisor.</p>
+      <p class="lede">Se presentan dos alternativas de operación con el mismo diseño de supervisión nocturna: un esquema de 3 supervisores para 3 zonas y una alternativa de optimización con 2 supervisores, dividiendo Barranquilla en dos grandes áreas operativas.</p>
+
+      <div class="scenario-switch" id="scenario-switch">
+        <button class="scenario-btn active" data-scenario="three"><strong>Propuesta 1 · 3 Supervisores</strong><span>3 geocercas · cobertura territorial por zona</span></button>
+        <button class="scenario-btn" data-scenario="two"><strong>Propuesta 2 · 2 Supervisores</strong><span>2 zonas · alternativa de optimización de recurso</span></button>
+      </div>
+
+      <div id="scenario-note-three" class="scenario-note">Modelo base: cada supervisor mantiene una geocerca independiente. Se conserva la distribución territorial actualmente planteada.</div>
+      <div id="scenario-note-two" class="scenario-note" style="display:none">Modelo alternativo: Barranquilla se organiza en dos áreas operativas amplias, utilizando como referencia el eje central de la ciudad y la concentración territorial de los puntos críticos ya identificados en la propuesta. Esta división es <b>preliminar</b> y deberá validarse con la matriz histórica de sucesos antes de su implementación.</div>
 
       <!-- Interactive Proposal Map -->
       <div class="propuesta-map-container">
@@ -836,6 +858,30 @@
             <li><strong>Horario:</strong> 18:00 a 06:00 hrs (Monitoreo disuasivo nocturno).</li>
             <li><strong>Eje Crítico:</strong> Control de accesos a puentes, vías de escape rápido y arterias comerciales.</li>
           </ul>
+        </div>
+      </div>
+
+      <div id="two-supervisor-panel" class="scenario-panel">
+        <div class="eyebrow" style="margin-top:42px;">Alternativa de Optimización · 2 Supervisores</div>
+        <h3 class="disp" style="font-size:34px; margin-bottom:12px;">División Operativa de Barranquilla en 2 Zonas</h3>
+        <p class="lede">La propuesta conserva el modelo de patrullaje, control y trazabilidad, pero concentra la cobertura en dos supervisores. La línea de división se plantea sobre un eje central para reducir cruces de recorrido y facilitar la asignación territorial.</p>
+        <div class="zone-cards-grid">
+          <div class="zone-card active">
+            <span class="zone-tag" style="background:rgba(56,189,248,0.18); color:#38BDF8;">Zona A · Supervisor 01</span>
+            <h4>Norte + Occidente</h4>
+            <p><strong>Área operacional:</strong> Riomar, Norte, sectores centrales del norte, Vía 40, corredores industriales y Suroccidente/Juan Mina.</p>
+            <ul><li><strong>Asignación:</strong> 1 Supervisor S.O.S.</li><li><strong>Horario:</strong> 18:00 a 06:00 hrs.</li><li><strong>Criterio:</strong> concentración de recorridos del norte y occidente en una sola geocerca amplia.</li></ul>
+          </div>
+          <div class="zone-card">
+            <span class="zone-tag" style="background:rgba(255,199,0,0.18); color:#FFC700;">Zona B · Supervisor 02</span>
+            <h4>Centro + Suroriente</h4>
+            <p><strong>Área operacional:</strong> Centro, Rebolo, San Roque, Suroriente, Calle 30, Corredor Portuario y accesos hacia el Puente Pumarejo.</p>
+            <ul><li><strong>Asignación:</strong> 1 Supervisor S.O.S.</li><li><strong>Horario:</strong> 18:00 a 06:00 hrs.</li><li><strong>Criterio:</strong> cobertura continua del eje sur y oriental, manteniendo atención sobre corredores de acceso y puntos críticos.</li></ul>
+          </div>
+        </div>
+        <div class="cost-compare">
+          <div class="cost-box"><h4>Modelo de 3 supervisores</h4><p>3 responsables territoriales para 3 geocercas independientes. Mayor especialización por zona y menor amplitud territorial por supervisor.</p></div>
+          <div class="cost-box highlight"><h4>Modelo de 2 supervisores</h4><p>2 responsables territoriales para 2 zonas amplias. La alternativa permite presentar una estructura de menor cantidad de supervisores, manteniendo el mismo concepto de operación nocturna.</p></div>
         </div>
       </div>
 
@@ -1215,6 +1261,40 @@ document.getElementById('zone-cards').addEventListener('click', (e) => {
   if (!card) return;
   filterPropMap(card.dataset.zone);
 });
+
+// Selector de escenario: conserva el mismo diseño y permite presentar 3 o 2 supervisores.
+const scenarioButtons = document.querySelectorAll('#scenario-switch .scenario-btn');
+const twoPanel = document.getElementById('two-supervisor-panel');
+const noteThree = document.getElementById('scenario-note-three');
+const noteTwo = document.getElementById('scenario-note-two');
+scenarioButtons.forEach(btn => btn.addEventListener('click', () => {
+  const scenario = btn.dataset.scenario;
+  scenarioButtons.forEach(b => b.classList.toggle('active', b === btn));
+  const isTwo = scenario === 'two';
+  twoPanel.classList.toggle('active', isTwo);
+  noteThree.style.display = isTwo ? 'none' : 'block';
+  noteTwo.style.display = isTwo ? 'block' : 'none';
+  document.querySelectorAll('#zone-filters button').forEach(b => b.style.display = isTwo ? 'none' : '');
+  if (isTwo) {
+    Object.keys(geofenceLayers).forEach(k => {
+      if (propMap.hasLayer(geofenceLayers[k].polygon)) propMap.removeLayer(geofenceLayers[k].polygon);
+      if (propMap.hasLayer(geofenceLayers[k].markers)) propMap.removeLayer(geofenceLayers[k].markers);
+    });
+    // Dos áreas visuales preliminares. La frontera se ubica sobre el eje central para facilitar el control territorial.
+    if (!window.twoZoneLayers) {
+      const northWest = L.polygon([[11.048,-74.825],[11.025,-74.798],[11.000,-74.780],[10.985,-74.785],[10.980,-74.810],[10.950,-74.815],[10.930,-74.835],[10.940,-74.900],[10.970,-74.890],[11.020,-74.845]], {color:'#38BDF8',fillColor:'#38BDF8',fillOpacity:.20,weight:2,dashArray:'8,6'}).bindPopup('<div class="popup-t">Zona A · Supervisor 01</div><div class="popup-n">Norte + Occidente</div><div class="popup-d">Alternativa de 2 supervisores · validación final con matriz histórica de sucesos.</div>');
+      const southEast = L.polygon([[10.985,-74.785],[10.990,-74.770],[10.965,-74.750],[10.940,-74.750],[10.950,-74.785],[10.980,-74.810],[10.985,-74.785]], {color:'#FFC700',fillColor:'#FFC700',fillOpacity:.20,weight:2,dashArray:'8,6'}).bindPopup('<div class="popup-t">Zona B · Supervisor 02</div><div class="popup-n">Centro + Suroriente</div><div class="popup-d">Alternativa de 2 supervisores · validación final con matriz histórica de sucesos.</div>');
+      const aMarkers=L.layerGroup(), bMarkers=L.layerGroup();
+      GEODATA.forEach(pt=>{ const isA = pt.zone !== 'z3'; const c=pt.reincidente?'#FF0033':(isA?'#38BDF8':'#FFC700'); const m=L.circleMarker([pt.lat,pt.lon],{radius:pt.reincidente?9:6,color:'#fff',weight:pt.reincidente?2.5:1.5,fillColor:c,fillOpacity:1,className:pt.reincidente?'reincidente-marker':''}).bindPopup((pt.reincidente?'<div class="badge-reincidente">⚠️ Alta Reincidencia de Hurto</div><br>':'')+'<div class="popup-t">'+(isA?'Zona A · Supervisor 01':'Zona B · Supervisor 02')+'</div><div class="popup-n">'+pt.nombre+'</div><div class="popup-d">Punto de monitoreo nocturno.</div>'); (isA?aMarkers:bMarkers).addLayer(m); });
+      window.twoZoneLayers={a:{polygon:northWest,markers:aMarkers},b:{polygon:southEast,markers:bMarkers}};
+    }
+    Object.values(window.twoZoneLayers).forEach(l=>{l.polygon.addTo(propMap);l.markers.addTo(propMap);});
+    propMap.setView([10.985,-74.805],12);
+  } else {
+    if (window.twoZoneLayers) Object.values(window.twoZoneLayers).forEach(l=>{if(propMap.hasLayer(l.polygon))propMap.removeLayer(l.polygon);if(propMap.hasLayer(l.markers))propMap.removeLayer(l.markers);});
+    filterPropMap('all');
+  }
+}));
 </script>
 </body>
 </html>
