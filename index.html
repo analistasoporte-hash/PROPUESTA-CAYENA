@@ -1002,16 +1002,30 @@ function switchMainTab(tabName) {
     }, 150);
   }
 
-  // Al cambiar de módulo desde el cierre, llevar al usuario al inicio del contenido.
-  // Se descuenta la altura de las barras fijas para que el título y las pestañas no queden ocultos.
-  const tabsBar = document.querySelector('.main-tabs-bar');
-  if (tabsBar) {
-    setTimeout(() => {
-      const nav = document.getElementById('topnav');
-      const offset = (nav ? nav.offsetHeight : 0) + 8;
-      const targetY = tabsBar.getBoundingClientRect().top + window.pageYOffset - offset;
-      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
-    }, 50);
+  // Navegación: después de cambiar de pestaña, desplazar realmente el documento
+  // hasta el contenido seleccionado. No usamos la barra sticky como destino,
+  // porque desde el cierre puede quedar fuera de la posición esperada.
+  const targetPane = tabName === 'diag' ? diagPane : propPane;
+  if (targetPane) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const nav = document.getElementById('topnav');
+        const tabsBar = document.querySelector('.main-tabs-bar');
+        const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+        const tabsHeight = tabsBar ? tabsBar.getBoundingClientRect().height : 0;
+        const targetY = targetPane.getBoundingClientRect().top
+          + window.pageYOffset
+          - navHeight
+          - tabsHeight
+          - 12;
+
+        window.scrollTo({
+          top: Math.max(0, targetY),
+          left: 0,
+          behavior: 'smooth'
+        });
+      });
+    });
   }
 }
 
