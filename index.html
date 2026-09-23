@@ -1001,6 +1001,18 @@ function switchMainTab(tabName) {
       if (typeof propMap !== 'undefined') propMap.invalidateSize();
     }, 150);
   }
+
+  // Al cambiar de módulo desde el cierre, llevar al usuario al inicio del contenido.
+  // Se descuenta la altura de las barras fijas para que el título y las pestañas no queden ocultos.
+  const tabsBar = document.querySelector('.main-tabs-bar');
+  if (tabsBar) {
+    setTimeout(() => {
+      const nav = document.getElementById('topnav');
+      const offset = (nav ? nav.offsetHeight : 0) + 8;
+      const targetY = tabsBar.getBoundingClientRect().top + window.pageYOffset - offset;
+      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+    }, 50);
+  }
 }
 
 // Scroll progress bar listener
